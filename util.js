@@ -7,4 +7,11 @@ const CONSTANTS = {
 	HEIGHT:208,
 	CHUNKBITS:16*16*3,
 }
-module.exports = { CONSTANTS, events };
+
+const RANK = {
+	NONE:0,
+	USER:1,
+	MODERATOR:2,
+	ADMIN:3,
+}
+module.exports = { CONSTANTS, events, RANK };

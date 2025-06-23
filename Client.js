@@ -12,7 +12,8 @@ class Client{
 		clopts = {
 			...clopts,
 			headers:{
-				'User-Agent': 'OWOPJS-Minesweeper/1.0'
+				'User-Agent': 'OWOPJS-Minesweeper/1.0',
+				'bot-identifier': 'minesweeper',
 			}
 		}
 		this.bot = new OJS.Client(clopts);
@@ -105,6 +106,10 @@ class Client{
 
 	queueChunk(x,y,data){
 		this.#chunkQueue.push([x,y,data]);
+	}
+
+	tellPlayer(id, message){
+		this.bot.chat.send(`/tellraw ${id} ${message}`);
 	}
 }
 module.exports = Client;

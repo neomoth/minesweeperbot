@@ -1,6 +1,7 @@
 const Client = require('./Client');
 const Canvas = require('./Canvas');
 const Game = require('./Game');
+const {loadCommands, handleCommand} = require("./commandHandler");
 require('dotenv').config();
 
 const options = {
@@ -20,18 +21,26 @@ const client = new Client(options, {
 	adminlogin: process.env.ADMINPASS,
 	reconnect: true,
 	unsafe: true,
-	origin: 'https://pre.ourworldofpixels.com',
-	ws: 'wss://pre.ourworldofpixels.com',
+	// origin: 'https://pre.ourworldofpixels.com',
+	// ws: 'wss://pre.ourworldofpixels.com',
+	origin: 'https://localhost:8080',
+	ws:'ws://localhost:13374?chat=v2'
 });
 
 client.bot.on('id', async(id)=>{
 	client.bot.world.move(options.worldX,options.worldY);
 	console.log("waiting for bot to request all chunks");
 	await client.ready;
+	await loadCommands();
 	console.log("initializing game");
 	store.game = new Game(store.difficulty);
 	store.canvas = await Canvas.create(client,options.worldX,options.worldY);
 	store.canvas.updateCanvas(store.game);
+});
+
+client.bot.on('jsonMessage',async(msg)=>{
+	console.log(msg.type);
+	if(msg.type==='whisperReceived') handleCommand(client, msg);
 });
 
 client.bot.on('pixel', async(id,x,y,[r,g,b])=>{
