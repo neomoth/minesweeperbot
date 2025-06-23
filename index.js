@@ -16,10 +16,12 @@ const store = {
 }
 
 const client = new Client(options, {
-	world: 'thisisareallystupidtestworldteehee',
+	//world: 'thisisareallystupidtestworldteehee',
 	adminlogin: process.env.ADMINPASS,
 	reconnect: true,
 	unsafe: true,
+	origin: 'https://pre.ourworldofpixels.com',
+	ws: 'wss://pre.ourworldofpixels.com',
 });
 
 client.bot.on('id', async(id)=>{
