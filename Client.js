@@ -14,6 +14,7 @@ class Client{
 			headers:{
 				'User-Agent': 'OWOPJS-Minesweeper/1.0',
 				'bot-identifier': 'minesweeper',
+				'bot-secret': process.env.SECRET,
 			}
 		}
 		this.bot = new OJS.Client(clopts);
