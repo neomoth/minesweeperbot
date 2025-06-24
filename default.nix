@@ -1,4 +1,4 @@
-{ pkgs ? import <nixpkgs> {}, hooks, nodejs }:
+{ pkgs ? import <nixpkgs> {}, nodejs }:
 
 pkgs.buildNpmPackage {
   pname = "minesweeperbot";
@@ -10,8 +10,6 @@ pkgs.buildNpmPackage {
   npmDeps = pkgs.importNpmLock {
     npmRoot = ./.;
   };
-
-  preConfigure = hooks.prepare;
 
   postBuild = ''
     npx next-sitemap
