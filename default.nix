@@ -9,8 +9,13 @@ with pkgs; stdenv.mkDerivation rec {
 
 	nativeBuildInputs = [
 		pkgs.nodejs_22
-		pkgs.nodePackages.npm
+		npmHooks.npmInstallHook
 	];
+
+	npmDeps = fetchNpmDeps {
+		src= ./.;
+		hash="sha256-CHANGEME";
+	};
 
 	buildPhase = ''
 		export HOME=$(mktemp -d)
