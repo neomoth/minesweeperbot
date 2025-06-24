@@ -14,12 +14,12 @@ WorkingDirectory=%h/%N-cwd/
 ExecStart=%h/%N-result/bin/minesweeperbot
 
 # rootfs isolation
-RuntimeDirectory=%N-root
-RootDirectory=%t/%N-root
+#RuntimeDirectory=%N-root
+#RootDirectory=%t/%N-root
 # home dir root + unit name@instance without extension + "-cwd"
-BindPaths=%h/%N-cwd %h/%N-result
-BindReadOnlyPaths=/nix/store /etc/resolv.conf /etc/ssl/certs/ca-bundle.crt
-BindReadOnlyPaths=/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
+#BindPaths=%h/%N-cwd %h/%N-result
+#BindReadOnlyPaths=/nix/store /etc/resolv.conf /etc/ssl/certs/ca-bundle.crt
+#BindReadOnlyPaths=/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
 
 MemoryHigh=4G
 MemoryMax=5G
