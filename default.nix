@@ -16,6 +16,8 @@ with pkgs; stdenv.mkDerivation rec {
 		mkdir -p $out/bin $out/libexec/${pname}
 		cp -r ./* $out/libexec/${pname}/
 		cd $out/libexec/${pname}/
+		export NPM_CONFIG_FUND=false
+		export NPM_CONFIG_AUDIT=false
 		npm ci --omit=dev
 	'';
 
