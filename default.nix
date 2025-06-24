@@ -25,7 +25,7 @@ with pkgs; stdenv.mkDerivation rec {
 	installPhase = ''
 		cat <<EOF > $out/libexec/${pname}
 #!/bin/sh
-exec ${serverRuntime}/bin/node '$out/libexec/${pname}/index.js
+exec ${serverRuntime}/bin/node '$out/libexec/${pname}/index.js'
 EOF
 		chmod +x $out/bin/${pname}
 	'';
