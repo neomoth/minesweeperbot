@@ -14,6 +14,7 @@ with nixpkgs; buildNpmPackage rec {
 		node-gyp
 		nodejs
 		pkg-config
+		pixman-1
 		#npmHooks.npmInstallHook
 	];
 
