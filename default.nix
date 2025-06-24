@@ -24,6 +24,8 @@ with pkgs; pkgs.buildNpmPackage rec {
       gdk-pixbuf
     ];
 
+  dontNpmBuild = true;
+
   installPhase = ''
     runHook preInstall
 
