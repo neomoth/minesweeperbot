@@ -9,7 +9,7 @@ with pkgs; pkgs.buildNpmPackage rec {
     npmRoot = ./.;
   };
 
-  buildInputs = with pkgs; [ cairo pango pixman pkg-config ];
+  buildInputs = with pkgs; [ cairo pango pixman pkg-config nodePackages.node-gyp ];
 
   installPhase = ''
     runHook preInstall
