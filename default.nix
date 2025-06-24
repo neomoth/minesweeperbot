@@ -13,6 +13,7 @@ with pkgs; stdenv.mkDerivation rec {
 	];
 
 	buildPhase = ''
+		export HOME=$(mktemp -d)
 		mkdir -p $out/bin $out/libexec/${pname}
 		cp -r ./* $out/libexec/${pname}/
 		cd $out/libexec/${pname}/
