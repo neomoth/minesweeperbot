@@ -51,7 +51,7 @@ class Client{
 	}
 
 	async initChunks(options){
-		console.log("initializing chunks");
+		// console.log("initializing chunks");
 		const chs = 16;
 		const scx = Math.floor(options.worldX/chs);
 		const scy = Math.floor(options.worldY/chs);
@@ -61,7 +61,7 @@ class Client{
 		const requests = [];
 		for(let cy=scy;cy<=ecy;cy++){
 			for(let cx=scx;cx<=ecx;cx++){
-				console.log(`requesting chunk (${cx},${cy}).`);
+				// console.log(`requesting chunk (${cx},${cy}).`);
 				requests.push(this.loadChunkData(cx,cy));
 			}
 		}

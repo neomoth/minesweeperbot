@@ -40,7 +40,7 @@ async function loadCommands() {
 
 				if (command?.data?.name) {
 					commands.set(command.data.name.toLowerCase(), command);
-					console.log(`Loaded command: ${command.data.name}`);
+					// console.log(`Loaded command: ${command.data.name}`);
 				}
 			} catch (e) {
 				console.error(`Failed to load command: ${file}: `, e);

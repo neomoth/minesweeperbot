@@ -46,13 +46,13 @@ class Canvas {
 	async loadAssets() {
 		const assets = ['tiles','numbers','numbers-id','buttons','buttons-disabled','buttons-selected','statuses','title','cmd','flag'];
 		for(const asset of assets) {
-			console.log(`loading asset ${asset}`);
+			// console.log(`loading asset ${asset}`);
 			const img = await loadImage(path.join(__dirname, this.assets, `${asset}.png`));
 			const canvas = createCanvas(img.width, img.height);
 			const ctx = canvas.getContext('2d');
 			ctx.drawImage(img,0,0);
 			this.images[asset]=canvas;
-			console.log(this.images[asset]);
+			// console.log(this.images[asset]);
 		}
 	}
 
