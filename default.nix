@@ -1,24 +1,27 @@
-{ pkgs ? import <nixpkgs> {}, nodejs }:
+{ pkgs ? import <nixpkgs> {} }:
 
 pkgs.buildNpmPackage {
   pname = "minesweeperbot";
   version = "1.0.0";
   src = ./.;
 
-  inherit nodejs;
-
   npmDeps = pkgs.importNpmLock {
     npmRoot = ./.;
   };
 
-  postBuild = ''
-    npx next-sitemap
-  '';
-
   installPhase = ''
     runHook preInstall
-    npx pagefind --site ./out
-    mv out $out
+
+    mkdir -p $out/libexec/${pname}
+    cp -r ./* $out/libexec/${pname}/
+
+    mkdir -p $out/bin
+    cat <<EOF > $out/bin/${pname}
+#!/bin/sh
+exec ${pkgs.nodejs_22}/bin/node $out/libexec/${pname}/index.js
+EOF
+    chmod +x $out/bin/${pname}
+
     runHook postInstall
   '';
 
