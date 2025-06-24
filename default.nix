@@ -11,6 +11,16 @@ pkgs.buildNpmPackage {
 
   npmPackFlags = ["--ignore-scripts"];
 
+  nativeBuildInputs = with pkgs; [
+      pkg-config
+      cairo
+      libpng
+      pixman
+      pango
+      giflib
+      glib
+  ];
+
   NODE_OPTIONS = "--openssl-legacy-provider";
 
   meta = {
