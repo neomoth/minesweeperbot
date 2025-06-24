@@ -13,7 +13,7 @@ pkgs.stdenv.mkDerivation rec {
 
   npmDeps = pkgs.fetchNpmDeps {
     src = src;
-    hash = npmDepsHash;
+    hash = depsHash;
   };
 
   nativeBuildInputs = [
@@ -29,12 +29,13 @@ pkgs.stdenv.mkDerivation rec {
   buildPhase = ''
     runHook preBuild
 
-    # Create node_modules from pre-fetched deps
-    cp -r $npmDeps node_modules
-    chmod -R +w node_modules  # Make writable for npm
+    # Create and populate node_modules from pre-fetched deps
+    mkdir -p node_modules
+    cp -r $npmDeps/* node_modules/
+    chmod -R +w node_modules
 
-    # Verify offline installation
-    npm ci --omit=dev --offline --no-audit --no-fund
+    # Verify the lockfile matches the pre-fetched deps
+    npm ci --omit=dev --offline --no-audit --no-fund --ignore-scripts
 
     runHook postBuild
   '';
