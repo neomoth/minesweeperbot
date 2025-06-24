@@ -4,7 +4,7 @@ let
   # Get this hash by:
   # 1. First run with fake hash (sha256-AAAAAAAA...)
   # 2. Copy the actual hash from the error message
-  npmDepsHash = "sha256-ACTUALHASHHERE"; # REPLACE THIS
+  npmDepsHash = "sha256-8kHZmODo5El+WxWk1XG383mapgJPRODGOkbmEyqOB5M="; # REPLACE THIS
 in
 pkgs.stdenv.mkDerivation rec {
   pname = "minesweeperbot";
