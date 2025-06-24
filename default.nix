@@ -10,6 +10,7 @@ pkgs.buildNpmPackage {
   npmDepsHash = "sha256-oiZFqvbVqXZTjpcmZee+7YGjjF+5ZaUg3ciKVpPigNk=";
 
   npmPackFlags = ["--ignore-scripts"];
+  dontNpmBuild = true;
 
   # This ensures that node-gyp can build native modules
   nativeBuildInputs = with pkgs; [
