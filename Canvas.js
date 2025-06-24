@@ -4,7 +4,7 @@ const path = require('path');
 const { CONSTANTS, events } = require('./util');
 
 class Canvas {
-	constructor(client, x, y, assetPath = './assets'){
+	constructor(client, x, y, assetPath = 'assets'){
 		this.client = client;
 		this.assets = assetPath;
 		this.tileSize = 9;
@@ -29,7 +29,7 @@ class Canvas {
 		});
 	}
 
-	static async create(client,x,y,assetPath='./assets'){
+	static async create(client,x,y,assetPath='assets'){
 		const canvas = new Canvas(client,x,y,assetPath);
 		await canvas.init();
 		return canvas;
@@ -47,7 +47,7 @@ class Canvas {
 		const assets = ['tiles','numbers','numbers-id','buttons','buttons-disabled','buttons-selected','statuses','title','cmd','flag'];
 		for(const asset of assets) {
 			console.log(`loading asset ${asset}`);
-			const img = await loadImage(path.join(this.assets, `${asset}.png`));
+			const img = await loadImage(path.join(__dirname, this.assets, `${asset}.png`));
 			const canvas = createCanvas(img.width, img.height);
 			const ctx = canvas.getContext('2d');
 			ctx.drawImage(img,0,0);
