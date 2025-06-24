@@ -14,7 +14,7 @@ with pkgs; stdenv.mkDerivation rec {
 
   npmDeps = fetchNpmDeps {
     src = ./.;
-    hash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="; # Temporary placeholder
+    hash = "sha256-8kHZmODo5El+WxWk1XG383mapgJPRODGOkbmEyqOB5M="; # Temporary placeholder
   };
 
   buildPhase = ''
