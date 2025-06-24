@@ -1,39 +1,58 @@
 { pkgs ? import <nixpkgs> {} }:
 
-with pkgs; stdenv.mkDerivation rec {
+let
+  # Get this hash by:
+  # 1. First run with fake hash (sha256-AAAAAAAA...)
+  # 2. Copy the actual hash from the error message
+  npmDepsHash = "sha256-ACTUALHASHHERE"; # REPLACE THIS
+in
+pkgs.stdenv.mkDerivation rec {
   pname = "minesweeperbot";
   version = "1.0.0";
   src = ./.;
 
-  serverRuntime = pkgs.nodejs_22;
+  npmDeps = pkgs.fetchNpmDeps {
+    src = src;
+    hash = npmDepsHash;
+  };
 
   nativeBuildInputs = [
     pkgs.nodejs_22
-    npmHooks.npmInstallHook
   ];
 
-  npmDeps = fetchNpmDeps {
-    src = ./.;
-    hash = "sha256-8kHZmODo5El+WxWk1XG383mapgJPRODGOkbmEyqOB5M="; # Temporary placeholder
-  };
+  configurePhase = ''
+    runHook preConfigure
+    export HOME=$(mktemp -d)
+    runHook postConfigure
+  '';
 
   buildPhase = ''
-    export HOME=$(mktemp -d)
-    mkdir -p $out/libexec/${pname}
-    cp -r ./* $out/libexec/${pname}/
-    cd $out/libexec/${pname}/
-    export NPM_CONFIG_FUND=false
-    export NPM_CONFIG_AUDIT=false
-    npm ci --omit=dev --offline
+    runHook preBuild
+
+    # Create node_modules from pre-fetched deps
+    cp -r $npmDeps node_modules
+    chmod -R +w node_modules  # Make writable for npm
+
+    # Verify offline installation
+    npm ci --omit=dev --offline --no-audit --no-fund
+
+    runHook postBuild
   '';
 
   installPhase = ''
+    runHook preInstall
+
+    mkdir -p $out/libexec/${pname}
+    cp -r ./* $out/libexec/${pname}/
+
     mkdir -p $out/bin
     cat <<EOF > $out/bin/${pname}
 #!/bin/sh
-exec ${serverRuntime}/bin/node $out/libexec/${pname}/index.js
+exec ${pkgs.nodejs_22}/bin/node $out/libexec/${pname}/index.js
 EOF
     chmod +x $out/bin/${pname}
+
+    runHook postInstall
   '';
 
   meta = {
