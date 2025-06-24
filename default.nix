@@ -11,19 +11,39 @@ pkgs.buildNpmPackage {
 
   npmPackFlags = ["--ignore-scripts"];
 
+  # This ensures that node-gyp can build native modules
   nativeBuildInputs = with pkgs; [
-      pkg-config
-      cairo
-      libpng
-      pixman
-      pango
-      giflib
-      glib
+    pkg-config
+    python3
+    nodejs_22
   ];
 
-  NODE_OPTIONS = "--openssl-legacy-provider";
+  buildInputs = with pkgs; [
+    cairo
+    libpng
+    pango
+    pixman
+    giflib
+    glib
+    zlib
+  ];
+
+  # Some modules still want this for compatibility
+  env = {
+    PKG_CONFIG_PATH = pkgs.lib.makeSearchPath "lib/pkgconfig" [
+      pkgs.cairo
+      pkgs.libpng
+      pkgs.pango
+      pkgs.pixman
+      pkgs.giflib
+      pkgs.glib
+      pkgs.zlib
+    ];
+    NODE_OPTIONS = "--openssl-legacy-provider";
+  };
 
   meta = {
     description = "minesweeper bot for OWOP";
+    license = pkgs.lib.licenses.mit;
   };
 }
