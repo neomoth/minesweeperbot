@@ -22,7 +22,7 @@ require('dotenv').config();
 		//world: 'thisisareallystupidtestworldteehee',
 		adminlogin: process.env.ADMINPASS,
 		reconnect: true,
-		noLog: true,
+		noLog: process.env.LOGGING !== "true",
 		unsafe: true,
 		// origin: 'https://pre.ourworldofpixels.com',
 		// ws: 'wss://pre.ourworldofpixels.com',
