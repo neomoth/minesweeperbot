@@ -1,4 +1,4 @@
-{ pkgs, hooks, nodejs }:
+{ pkgs ? import <nixpkgs> {}, hooks, nodejs }:
 
 pkgs.buildNpmPackage {
   pname = "minesweeperbot";
