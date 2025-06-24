@@ -1,4 +1,7 @@
-{lib,buildNpmPackage,fetchFromGithub,}:
+{
+	lib ? import <nixpkgs> {},
+	buildNpmPackage,
+}:
 
 buildNpmPackage(finalAttrs: {
 	pname="minesweeperbot";
