@@ -17,6 +17,10 @@ class Client{
 				'bot-secret': process.env.SECRET,
 			}
 		}
+		if(clopts.chatProtocol==="v1"||clopts.chatProtocol==="v2"){
+			clopts.ws += `?chat=${clopts.chatProtocol}`;
+			delete clopts.chatProtocol;
+		}
 		this.bot = new OJS.Client(clopts);
 		this.ready = new Promise(res=>{
 			this.#resolveReady = res;

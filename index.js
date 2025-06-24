@@ -28,6 +28,7 @@ require('dotenv').config();
 		origin: process.env.ORIGIN,
 		ws:process.env.WS,
 		world:process.env.WORLD,
+		chatProtocol: process.env.PROTOCOL,
 	});
 
 	await loadCommands();
