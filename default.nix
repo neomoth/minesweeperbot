@@ -1,6 +1,6 @@
 { pkgs ? import<nixpkgs> {} }:
 
-pkgs.stdenv.mkDerviation rec {
+with nixpkgs; stdenv.mkDerviation rec {
 	pname = "minesweeperbot";
 	version = "1.0.0";
 	src = ./.;
