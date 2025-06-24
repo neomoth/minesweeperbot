@@ -10,10 +10,16 @@ Type=simple
 SyslogIdentifier=%N
 Restart=on-failure
 
-WorkingDirectory=/cwd
+WorkingDirectory=%h/%N-cwd/
+ExecStart=/result/bin/minesweeperbot
+
+# rootfs isolation
 RuntimeDirectory=%N-root
 RootDirectory=%t/%N-root
-ExecStart=/result/bin/minesweeperbot
+# home dir root + unit name@instance without extension + "-cwd"
+BindPaths=%h/%N-cwd %h/%N-result
+BindReadOnlyPaths=/nix/store /etc/resolv.conf /etc/ssl/certs/ca-bundle.crt
+BindReadOnlyPaths=/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-certificates.crt /etc/pki/tls/certs/ca-bundle.crt
 
 MemoryHigh=4G
 MemoryMax=5G
@@ -22,12 +28,9 @@ MemorySwapMax=4G
 #SocketBindAllow=tcp:13375
 SocketBindDeny=any
 
-# home dir root + unit name@instance without extension + "-cwd"
-BindPaths=%h/%N-cwd:/cwd
-BindReadOnlyPaths=/nix/store /etc/resolv.conf %h/%N-result:/result
-BindReadOnlyPaths=/etc/ssl/certs/ca-bundle.crt /etc/pki/tls/certs/ca-bundle.crt
 NoExecPaths=/
 ExecPaths=/nix/store
+ReadWritePaths=%h/%N-cwd
 
 RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
 NoNewPrivileges=true
