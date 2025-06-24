@@ -1,0 +1,12 @@
+[Unit]
+Description=minesweeperbot builder
+
+[Service]
+Type=oneshot
+SyslogIdentifier=%N
+
+WorkingDirectory=%h
+ExecStart=/run/current-system/sw/bin/nix-build %h/minesweeperbot -o %h/minesweeperbot-result
+
+[Install]
+WantedBy=default.target

@@ -1,7 +1,7 @@
 { nixpkgs ? import <nixpkgs> {  } }:
 with nixpkgs; buildNpmPackage rec {
 	name = "minesweeperbot";
-	npmDepsHash = "sha256-6zJqBLKravu2vNKDDQZBK2n7avUwlGCbNB29RPVsB0w=";
+	npmDepsHash = "sha256-oiZFqvbVqXZTjpcmZee+7YGjjF+5ZaUg3ciKVpPigNk=";
 
 	src = fetchGit {
 		url = ./.;
