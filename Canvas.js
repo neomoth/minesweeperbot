@@ -187,7 +187,7 @@ class Canvas {
 
 	drawStatic(){
 		this.ctx.drawImage(this.images['title'],Math.floor((this.canvas.width/2)-(this.images['title'].width/2)),2);
-		this.ctx.drawImage(this.images['cmd'],2,this.canvas.height-this.images['cmd'].height-2);
+		if(this.client.protocol==='v2') this.ctx.drawImage(this.images['cmd'],2,this.canvas.height-this.images['cmd'].height-2);
 	}
 
 	drawButton(button){

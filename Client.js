@@ -19,6 +19,7 @@ class Client{
 		}
 		if(clopts.chatProtocol==="v1"||clopts.chatProtocol==="v2"){
 			clopts.ws += `?chat=${clopts.chatProtocol}`;
+			this.protocol = clopts.chatProtocol;
 			delete clopts.chatProtocol;
 		}
 		this.bot = new OJS.Client(clopts);
