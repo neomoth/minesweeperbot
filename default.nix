@@ -13,7 +13,7 @@ pkgs.stdenv.mkDerivation rec {
 
   npmDeps = pkgs.fetchNpmDeps {
     src = src;
-    hash = depsHash;
+    hash = npmDepsHash;
   };
 
   nativeBuildInputs = [
