@@ -3,8 +3,8 @@ const EventEmitter = require('node:events');
 let events = new EventEmitter();
 
 const CONSTANTS = {
-	WIDTH:289,
-	HEIGHT:208,
+	WIDTH:299,
+	HEIGHT:218,
 	CHUNKBITS:16*16*3,
 }
 

@@ -2,7 +2,7 @@ const path = require('node:path');
 const { readdir } = require("node:fs/promises");
 const {RANK} = require('./util');
 
-function handleCommand(client, json) {
+function handleCommand(client, game, json) {
 	console.log(commands);
 	let message = json.data.message;
 	let args = message.split(" ");
@@ -20,7 +20,7 @@ function handleCommand(client, json) {
 	}
 	if (json.data.rank < (!!cmd.data.minRank ? cmd.data.minRank : RANK.NONE)) return;
 	if (cmd.data.disabled) return;
-	cmd.execute(client, json, args);
+	cmd.execute(client, game, json, args);
 }
 
 const commands = new Map();

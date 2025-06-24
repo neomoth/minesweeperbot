@@ -23,9 +23,9 @@ class Client{
 		});
 		this.bot.on('id', async(id)=>{
 			await this.initChunks(pgopts);
-			this.#resolveReady();
+			// this.#resolveReady();
 
-			setInterval(()=>{
+			this.interval = setInterval(()=>{
 				if(this.#pixelQueue.length > 0){
 					const [x,y,clr] = this.#pixelQueue.shift();
 					this.bot.world.setPixel(x,y,clr,true);
@@ -38,6 +38,10 @@ class Client{
 				}
 				// console.log(this.#pixelQueue.length);
 			}, 5);
+		});
+
+		this.bot.on('close', ()=>{
+			clearInterval(this.interval);
 		});
 	}
 
@@ -58,6 +62,7 @@ class Client{
 		}
 
 		await Promise.all(requests);
+		events.emit('chunksLoaded');
 	}
 
 	async loadChunkData(cx,cy){

@@ -23,6 +23,10 @@ class Canvas {
 		events.on('worldupdate',(x,y)=>{
 			return this.updateChunks(x,y);
 		});
+		events.on('secondElapsed',(game)=>{
+			this.drawTimer(game);
+			return this.updateCanvas(game);
+		});
 	}
 
 	static async create(client,x,y,assetPath='./assets'){
@@ -32,13 +36,15 @@ class Canvas {
 	}
 
 	async init(){
-		await this.loadAssets();
 		this.clearCanvas();
-		this.drawTitle();
+		this.ctx.font = "28px Arial";
+		this.ctx.imageSmoothingEnabled = false;
+		this.ctx.fillText("loading...",0,0);
+		await this.loadAssets();
 	}
 
 	async loadAssets() {
-		const assets = ['tiles','numbers','numbers-id','buttons','buttons-disabled','buttons-selected','statuses','title'];
+		const assets = ['tiles','numbers','numbers-id','buttons','buttons-disabled','buttons-selected','statuses','title','cmd','flag'];
 		for(const asset of assets) {
 			console.log(`loading asset ${asset}`);
 			const img = await loadImage(path.join(this.assets, `${asset}.png`));
@@ -78,10 +84,11 @@ class Canvas {
 		else idx=0;
 
 		const offX = Math.floor(((this.canvas.width-tile.game.width*9)+tile.game.width)/2);
-		const offY = Math.floor(((this.canvas.height-tile.game.width*9)+tile.game.height))-8;
+		const offY = Math.floor(((this.canvas.height-tile.game.height*9)+tile.game.height)/2)+this.canvas.height/8;
+		// const offY = Math.floor(((this.canvas.height/2-(tile.game.height)*9)+tile.game.height))-8;
 
 		tile.game.bOffX = this.ox+offX;
-		tile.game.bOffY = this.oy+offY;
+		tile.game.bOffY = this.oy+offY-1;
 
 		tile.worldX = this.ox+offX+(x*8)+1;
 		tile.worldY = this.oy+offY+(y*8)+1;
@@ -89,8 +96,98 @@ class Canvas {
 		this.ctx.drawImage(this.images['tiles'],idx*8,row*8, 9, 9, offX+x*8, offY+y*8, 9, 9);
 	}
 
-	drawTitle(){
+	drawTimer(game){
+		this.drawNumber(this.canvas.width-6,2,game.elapsedSeconds,'right');
+		// const time = game.elapsedSeconds;
+		// const str = time.toString().split('').reverse().join('');
+		// const length = str.length;
+		// for(let i=0;i<length;i++){
+		// 	this.ctx.drawImage(this.images['numbers'],4*parseInt(str[i]),0,4,6,this.canvas.width-6-((length+2)*i),2,4,6);
+		// }
+	}
+
+	drawFlagCount(game){
+		this.drawNumber(game.bOffX-this.ox+(game.width*8)-10, game.bOffY-this.oy-6, game.mines-game.flagsPlaced,'right');
+		this.ctx.drawImage(this.images['flag'],game.bOffX-this.ox+(game.width*8)-5, game.bOffY-this.oy-6)
+	}
+
+	drawStatus(game){
+		const img = this.images['statuses']
+		let width=0;
+		switch(game.state){
+			case Game.STATE.IDLE:{
+				width=55;
+				break;
+			}
+			case Game.STATE.PLAYING:{
+				width=70;
+				break;
+			}
+			case Game.STATE.WIN:{
+				width=61;
+				break;
+			}
+			case Game.STATE.FAIL:{
+				width=64;
+				break;
+			}
+			case Game.STATE.QUIT:{
+				width=55;
+				break;
+			}
+		}
+		this.ctx.drawImage(img,0,6*game.state,width,6,this.canvas.width-2-width,this.canvas.height-8,width,6);
+	}
+
+	drawActiveID(game) {
+		const str = game.activePlayer === null ? "[---]" : `[${game.activePlayer}]`;
+		this.drawNumber(Math.floor(this.canvas.width / 2), 64, str, 'center','numbers-id');
+	}
+
+	drawNumber(x, y, number, align = 'right', override=null) {
+		const str = number.toString();
+		const digitWidth = 4;
+		const digitHeight = 6;
+		const totalWidth = str.length * digitWidth;
+
+		let startX;
+
+		switch (align) {
+			case 'left':
+				startX = x;
+				break;
+			case 'center':
+				startX = Math.floor(x - totalWidth / 2);
+				break;
+			case 'right':
+			default:
+				startX = x - totalWidth + digitWidth;
+				break;
+		}
+
+		for (let i = 0; i < str.length; i++) {
+			let char = str[i];
+			let digit;
+			if (char === '[') digit = 10;
+			else if (char === ']') digit = 11;
+			else if (char === '-') digit = 12;
+			else digit = parseInt(char);
+
+			if (isNaN(digit)) continue; // Skip invalid chars
+
+			this.ctx.drawImage(
+				this.images[override??'numbers'],
+				digit * digitWidth, 0,
+				digitWidth, digitHeight,
+				startX + i * digitWidth, y,
+				digitWidth, digitHeight
+			);
+		}
+	}
+
+	drawStatic(){
 		this.ctx.drawImage(this.images['title'],Math.floor((this.canvas.width/2)-(this.images['title'].width/2)),2);
+		this.ctx.drawImage(this.images['cmd'],2,this.canvas.height-this.images['cmd'].height-2);
 	}
 
 	drawButton(button){
@@ -100,7 +197,7 @@ class Canvas {
 				button.w=40;
 				button.h=21;
 				button.x=Math.floor((this.canvas.width/2)-(button.w/2));
-				button.y=25;
+				button.y=20;
 				this.ctx.drawImage(spritesheet,0,0,button.w,button.h,button.x,button.y,button.w,button.h);
 				break;
 			}
@@ -108,7 +205,7 @@ class Canvas {
 				button.w=33;
 				button.h=21;
 				button.x=Math.floor((this.canvas.width/2)-(button.w/2));
-				button.y=45;
+				button.y=41;
 				this.ctx.drawImage(spritesheet,0,21,button.w,button.h,button.x,button.y,button.w,button.h);
 				break;
 			}
@@ -142,6 +239,8 @@ class Canvas {
 	updateCanvas(game){
 		game.offX=this.ox;
 		game.offY=this.oy;
+		this.clearCanvas();
+		this.drawStatic();
 		for(let y = 0;y<game.board.length;y++){
 			for(let x=0;x<game.board[y].length;x++){
 				this.drawTile(x,y,game.getTile(x,y));
@@ -150,6 +249,10 @@ class Canvas {
 		for(let button of game.buttons){
 			this.drawButton(button);
 		}
+		this.drawTimer(game);
+		this.drawFlagCount(game);
+		this.drawStatus(game);
+		this.drawActiveID(game);
 		return this.updateWorld();
 	}
 
@@ -164,7 +267,7 @@ class Canvas {
 	}
 
 	async updateChunks(cx,cy){
-		console.log(`[updateChunks] Worldupdate triggered chunk (${cx},${cy})`);
+		//console.log(`[updateChunks] Worldupdate triggered chunk (${cx},${cy})`);
 		if(!this.client.chunks.get(cy)?.get(cx)) return;
 		const width = this.canvas.width;
 		const height = this.canvas.height;
@@ -175,7 +278,7 @@ class Canvas {
 	}
 
 	async updateWorld(){
-		console.log(`[updateWorld] Full canvas update triggered`);
+		//console.log(`[updateWorld] Full canvas update triggered`);
 		const width = this.canvas.width;
 		const height = this.canvas.height;
 		const chs = 16;
@@ -252,7 +355,7 @@ class Canvas {
 			}
 			else{
 				const pixelPromises = pixelUpdates.map(async ([px, py, clr]) => {
-					this.client.bot.world.setPixel(px, py, clr);
+					this.client.bot.world.setPixel(px, py, clr, true);
 					// this.client.queuePixel(px,py,clr);
 				});
 				return Promise.all(pixelPromises);

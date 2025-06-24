@@ -1,0 +1,13 @@
+[Unit]
+Description=Minesweeperbot for OWOP
+After=network.target
+
+[Service]
+Type=oneshot
+SyslogIdentifier=%N
+
+WorkingDirectory=%h
+ExecStart=/run/current-system/ws/bin/nix-build %h/minesweeperbot -o %h/minesweeperbot-result
+
+[Install]
+WantedBy=default.target

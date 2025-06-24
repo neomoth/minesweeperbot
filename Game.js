@@ -1,3 +1,7 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const { events } = require('./util');
+
 class Button{
 	constructor(game, id, callbacks, associatedDifficulty=null){
 		this.id = id;
@@ -10,10 +14,13 @@ class Button{
 		this.selected = false;
 		this.disabled = false;
 		this.associatedDifficulty = associatedDifficulty;
-		if(callbacks.onClick) this.onClick = ()=> callbacks.onClick(this);
+		if(callbacks.onClick) this.onClick = (id)=> callbacks.onClick(this, id);
 		if(callbacks.onFail) this.onFail = ()=> callbacks.onFail(this);
 		if(callbacks.onStart) this.onStart = ()=> callbacks.onStart(this);
 		if(callbacks.onWin) this.onWin = ()=> callbacks.onWin(this);
+		if(callbacks.onEnd) this.onEnd = ()=> callbacks.onEnd(this);
+		if(callbacks.onInit) this.onInit = ()=> callbacks.onInit(this);
+		if(callbacks.onQuit) this.onQuit = ()=> callbacks.onQuit(this);
 	}
 }
 
@@ -30,13 +37,22 @@ class Game{
 	static STATE = {
 		IDLE:0,
 		PLAYING:1,
-		QUIT:2,
-		WIN:3,
-		FAIL:4,
+		WIN:2,
+		FAIL:3,
+		QUIT:4,
 	}
 	constructor(difficulty){
 		this.difficulty = difficulty;
 		this.generateButtons();
+		this.buttons.forEach(btn=>{
+			if(btn.onInit) btn.onInit();
+		});
+		// for use once uvias implemented and can remember usernames
+		// const p = path.join(__dirname,'playerconf.json');
+		// if(fs.existsSync(p)) this.playerConf = JSON.parse(p);
+		// else this.playerConf = {};
+		this.playerConf = {};
+
 		this.init();
 	}
 
@@ -67,26 +83,43 @@ class Game{
 				break;
 			}
 		}
-		this.state = 'idle';
-		this.startTime=0;
+		this.firstClick = true;
+		this.state = Game.STATE.IDLE;
 		this.flagsPlaced=0;
+		this.timer = null;
+		this.elapsedSeconds = 0;
 		this.generateBoard();
+		this.activePlayer=null;
 	}
 
 	generateButtons(){
 		this.buttons = [
 			new Button(this,'startbtn',{
-				onClick:(btn)=>{
+				onClick:(btn,id)=>{
 					if(btn.disabled||btn.selected) return;
 					btn.selected=true;
 
-					if(btn.game.state!==Game.STATE.IDLE) btn.game.generateBoard();
-
-					btn.game.state=Game.STATE.PLAYING;
+					if(btn.game.state!==Game.STATE.IDLE) btn.game.init();
+					this.start(id);
 				},
-				onFail:(btn)=>{
-					btn.selected=false;
+				onEnd:(btn)=>{
+					btn.selected = false;
+				}
+			}),
+			new Button(this,'quitbtn',{
+				onInit:(btn)=>{
+					btn.disabled=true;
 				},
+				onStart:(btn)=>{
+					btn.disabled=false;
+				},
+				onClick:(btn)=>{
+					if(btn.disabled) return;
+					this.quit();
+				},
+				onEnd:(btn)=>{
+					btn.disabled=true;
+				}
 			}),
 			new Button(this,'beginnerbtn',{
 				onClick:(btn)=>{
@@ -97,6 +130,17 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.BEGINNER;
 					btn.game.init();
+				},
+				onInit:(btn)=>{
+					if(btn.game.difficulty!==Game.DIFFICULTY.BEGINNER) return;
+					btn.selected=true;
+					btn.game.selectedDifficultyButton=btn;
+				},
+				onStart:(btn)=>{
+					if(!btn.selected) btn.disabled = true;
+				},
+				onEnd:(btn)=>{
+					btn.disabled = false;
 				}
 			}, Game.DIFFICULTY.BEGINNER),
 			new Button(this,'intermediatebtn',{
@@ -108,6 +152,17 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.INTERMEDIATE;
 					btn.game.init();
+				},
+				onInit:(btn)=>{
+					if(btn.game.difficulty!==Game.DIFFICULTY.INTERMEDIATE) return;
+					btn.selected=true;
+					btn.game.selectedDifficultyButton=btn;
+				},
+				onStart:(btn)=>{
+					if(!btn.selected) btn.disabled = true;
+				},
+				onEnd:(btn)=>{
+					btn.disabled = false;
 				}
 			}, Game.DIFFICULTY.INTERMEDIATE),
 			new Button(this,'expertbtn',{
@@ -119,22 +174,31 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.EXPERT;
 					btn.game.init();
+				},
+				onInit:(btn)=>{
+					if(btn.game.difficulty!==Game.DIFFICULTY.EXPERT) return;
+					btn.selected=true;
+					btn.game.selectedDifficultyButton=btn;
+				},
+				onStart:(btn)=>{
+					if(!btn.selected) btn.disabled = true;
+				},
+				onEnd:(btn)=>{
+					btn.disabled = false;
 				}
 			}, Game.DIFFICULTY.EXPERT),
-			new Button(this,'hellbtn',{
-				onClick:(btn)=>{
-					if(btn.game.state===Game.STATE.PLAYING) return;
-					if(btn.disabled||btn.selected) return;
-					btn.selected=true;
-					if(btn.game.selectedDifficultyButton) btn.game.selectedDifficultyButton.selected = false;
-					btn.game.selectedDifficultyButton = btn;
-					btn.game.difficulty=Game.DIFFICULTY.BEGINNER;
-					btn.game.init();
-				}
-			}, Game.DIFFICULTY.SUICIDAL),
+			// new Button(this,'hellbtn',{
+			// 	onClick:(btn)=>{
+			// 		if(btn.game.state===Game.STATE.PLAYING) return;
+			// 		if(btn.disabled||btn.selected) return;
+			// 		btn.selected=true;
+			// 		if(btn.game.selectedDifficultyButton) btn.game.selectedDifficultyButton.selected = false;
+			// 		btn.game.selectedDifficultyButton = btn;
+			// 		btn.game.difficulty=Game.DIFFICULTY.BEGINNER;
+			// 		btn.game.init();
+			// 	}
+			// }, Game.DIFFICULTY.SUICIDAL),
 		];
-		this.selectedDifficultyButton = this.buttons.find(obj=>obj.associatedDifficulty===this.difficulty);
-		if(this.selectedDifficultyButton) this.selectedDifficultyButton.selected = true;
 	}
 
 	generateBoard(){
@@ -149,18 +213,35 @@ class Game{
 			}))
 		);
 
-		for(let iy=0;iy<this.height;iy++){
-			for(let ix=0;ix<this.width;ix++){
+		for(let iy=0;iy<this.height;iy++) {
+			for (let ix = 0; ix < this.width; ix++) {
 				this.board[iy][ix].y = iy;
 				this.board[iy][ix].x = ix;
 			}
 		}
+	}
 
+	placeMines(fx,fy){
+		const safeZone = new Set();
+		const zoneRadius = 1;
+		if(this.getPlayerConfig(this.activePlayer,'safeZone')){
+			for(let dy=-zoneRadius;dy<=zoneRadius;dy++){
+				for(let dx=-zoneRadius;dx<=zoneRadius;dx++){
+					const nx = fx+dx;
+					const ny = fy+dy;
+					if(nx >= 0 && nx < this.width && ny >= 0 && ny < this.height){
+						safeZone.add(`${nx},${ny}`);
+					}
+				}
+			}
+		} else safeZone.add(`${fx},${fy}`);
 		let minesPlaced = 0;
 		while(minesPlaced<this.mines){
 			const x = Math.floor(Math.random()*this.width);
 			const y = Math.floor(Math.random()*this.height);
+			const key = `${x},${y}`;
 
+			if(safeZone.has(key)) continue;
 			if(this.board[y][x].hasMine) continue;
 			this.board[y][x].hasMine = true;
 			minesPlaced++;
@@ -188,15 +269,15 @@ class Game{
 	}
 
 	revealTile(x,y){
-		if(this.state===Game.STATE.IDLE){
-			this.state=Game.STATE.PLAYING;
-			this.startTime = Date.now();
-		}
-
 		if(this.state!==Game.STATE.PLAYING) return;
 		if(x<0||x>=this.width||y<0||y>=this.height) return;
-
 		if(this.board[y][x].flagged||this.board[y][x].revealed) return;
+
+		if(this.firstClick){
+			this.firstClick = false;
+			this.state=Game.STATE.PLAYING;
+			this.placeMines(x,y);
+		}
 
 		this.board[y][x].revealed=true;
 
@@ -208,7 +289,21 @@ class Game{
 
 		if(this.board[y][x].adjacentMines===0) this.revealAdjacentTiles(x,y);
 
-		if(this.checkWin()) this.state=Game.STATE.WIN;
+		if(this.checkWin()) {
+			this.win()
+		}
+	}
+
+	flagAllMines(){
+		for(let y=0;y<this.board.length;y++){
+			for(let x=0;x<this.board[y].length;x++){
+				if(this.board[y][x].hasMine&&!this.board[y][x].revealed) {
+					if(this.board[y][x].flagged) continue;
+					this.board[y][x].flagged=true;
+					this.flagsPlaced++;
+				}
+			}
+		}
 	}
 
 	altRevealAdjacentTiles(x,y){
@@ -250,21 +345,36 @@ class Game{
 
 		this.board[y][x].flagged = !this.board[y][x].flagged;
 		this.flagsPlaced+=this.board[y][x].flagged?1:-1;
+		if(this.checkWin()) {
+			this.win()
+		}
 	}
 
 	checkWin(){
-		for(let y=0;y<this.height;y++){
-			for(let x=0;x<this.width;x++){
-				if(!this.board[y][x].hasMine&&!this.board[y][x].revealed) return false;
+		for(let y = 0; y < this.height; y++){
+			for(let x = 0; x < this.width; x++){
+				const tile = this.board[y][x];
+
+				if (!tile.hasMine && !tile.revealed) return false;
 			}
 		}
+
+		if (this.getPlayerConfig(this.activePlayer, 'mustFlagAllMines')) {
+			for(let y = 0; y < this.height; y++){
+				for(let x = 0; x < this.width; x++){
+					const tile = this.board[y][x];
+					if (tile.hasMine && !tile.flagged) return false;
+				}
+			}
+		}
+
 		return true;
 	}
 
 	revealMines(){
 		for(let y=0;y<this.height;y++){
 			for(let x=0;x<this.width;x++){
-				if(this.board[y][x].hasMine){
+				if(this.board[y][x].hasMine&&!this.board[y][x].flagged){
 					this.board[y][x].revealed=true;
 				}
 			}
@@ -298,14 +408,15 @@ class Game{
 		return null;
 	}
 
-	async tryClickButton(cx,cy){
+	async tryClickButton(cx,cy,id){
+		if(this.activePlayer!==null&&id!==this.activePlayer) return;
 		for(const button of this.buttons){
 			let x = cx-this.offX;
 			let y = cy-this.offY;
 			let w = (button.x+button.w);
 			let h = (button.y+button.h);
 			if(x<button.x||y<button.y||x>=w-1||y>=h-1)continue;
-			button.onClick();
+			button.onClick(id);
 			return true;
 		}
 		return false;
@@ -314,7 +425,80 @@ class Game{
 	fail(){
 		this.state=Game.STATE.FAIL;
 		this.revealMines();
-		for(const button of this.buttons) if(button.onFail) button.onFail();
+		this.buttons.forEach(btn=>{
+			if(btn.onFail) btn.onFail();
+		});
+		this.end();
+	}
+
+	start(id){
+		this.state=Game.STATE.PLAYING;
+
+		this.buttons.forEach(btn=>{
+			if(btn.onStart) btn.onStart();
+		});
+
+		this.activePlayer=id;
+		this.timer = setInterval(()=>{
+			this.elapsedSeconds++;
+			events.emit('secondElapsed', this);
+		},1000);
+	}
+
+	quit(){
+		this.buttons.forEach(btn=>{
+			if(btn.onQuit) btn.onQuit();
+		});
+		this.state=Game.STATE.QUIT;
+		this.end();
+	}
+
+	end(){
+		this.buttons.forEach(btn=>{
+			if(btn.onEnd) btn.onEnd();
+		});
+		clearInterval(this.timer);
+		this.timer = null;
+		this.activePlayer=null;
+	}
+
+	win(){
+		this.buttons.forEach(btn=>{
+			if(btn.onWin) btn.onWin();
+		});
+		this.flagAllMines();
+		this.state=Game.STATE.WIN;
+		this.end();
+	}
+
+	//number,string,boolean,object,Array.isArray(x)
+	static confKeys = {
+		safeZone: 'boolean',
+		mustFlagAllMines: 'boolean',
+	}
+
+	static confDefaults = {
+		safeZone: true,
+		mustFlagAllMines: false,
+	}
+
+	setPlayerConfig(id,key,val){
+		this.genPlayerConfig(id);
+		if(!Object.keys(Game.confKeys).includes(key)) return false;
+		if(typeof val !== Game.confKeys[key]) return false;
+		this.playerConf[id][key]=val;
+		return true;
+	}
+
+	genPlayerConfig(id){
+		if(!this.playerConf[id])this.playerConf[id]={...Game.confDefaults}
+		return this.playerConf[id];
+	}
+
+	getPlayerConfig(id,key){
+		this.genPlayerConfig(id);
+		if(!Object.keys(Game.confKeys).includes(key)) return null;
+		return this.playerConf[id][key];
 	}
 }
 module.exports = Game;
