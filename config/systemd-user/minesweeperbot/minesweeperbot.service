@@ -11,7 +11,7 @@ SyslogIdentifier=%N
 Restart=on-failure
 
 WorkingDirectory=%h/%N-cwd/
-ExecStart=/result/bin/minesweeperbot
+ExecStart=%h/%N-result/bin/minesweeperbot
 
 # rootfs isolation
 RuntimeDirectory=%N-root
