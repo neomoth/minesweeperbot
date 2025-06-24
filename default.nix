@@ -1,46 +1,40 @@
-{ pkgs ? import <nixpkgs> {} }:
+{ nixpkgs ? import <nixpkgs> {  } }:
+with nixpkgs; buildNpmPackage rec {
+	name = "minesweeperbot";
+	npmDepsHash = "sha256-6zJqBLKravu2vNKDDQZBK2n7avUwlGCbNB29RPVsB0w=";
 
-with pkgs; pkgs.buildNpmPackage rec {
-  pname = "minesweeperbot";
-  version = "1.0.0";
-  src = ./.;
+	src = fetchGit {
+		url = ./.;
+	};
 
-  npmDeps = pkgs.importNpmLock {
-    npmRoot = ./.;
-  };
+	enableParallelBuilding = true;
+	nodejs = pkgs.nodejs_20;
+	nativeBuildInputs = [
+		python3
+		node-gyp
+		nodejs
+		#npmHooks.npmInstallHook
+	];
 
-    nativeBuildInputs = with pkgs; [
-      pkg-config
-      python3
-      nodejs_22
-    ];
+	# Grab the dependencies for running later
+	buildPhase = ''
+		mkdir -p $out/bin $out/libexec/${name}
+		cp package.json $out/libexec/${name}/
+		cp -r node_modules $out/libexec/${name}/
+		cp -r src $out/libexec/${name}/
+	'';
 
-    buildInputs = with pkgs; [
-      cairo
-      pixman
-      pango
-      glib
-      libpng
-      gdk-pixbuf
-    ];
-
-  dontNpmBuild = true;
-
-  installPhase = ''
-    runHook preInstall
-
-    mkdir -p $out/libexec/${pname}
-    cp -r ./* $out/libexec/${pname}/
-
-    mkdir -p $out/bin
-    cat <<EOF > $out/bin/${pname}
-#!/bin/sh
-exec ${pkgs.nodejs_22}/bin/node $out/libexec/${pname}/index.js
+	# Write a script to the output folder that invokes the entrypoint of the application
+	installPhase = ''
+		cat <<EOF > $out/bin/${name}
+#!${runtimeShell}
+exec ${nodejs}/bin/node '$out/libexec/${name}/src/server.js';
 EOF
-    chmod +x $out/bin/${pname}
+		chmod a+x $out/bin/${name}
+	'';
 
-    runHook postInstall
-  '';
-
-  npmConfigHook = pkgs.importNpmLock.npmConfigHook;
+	meta = {
+		description = "minesweeper bot for owop";
+		platforms = lib.platforms.linux;
+	};
 }
