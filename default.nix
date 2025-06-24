@@ -14,6 +14,5 @@ buildNpmPackage(finalAttrs: {
 
 	meta = {
 		description = "minesweeper bot for OWOP";
-        platforms = pkgs.lib.platforms.linux;
 	};
 })
