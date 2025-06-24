@@ -1,6 +1,6 @@
 { pkgs ? import <nixpkgs> {} }:
 
-pkgs.buildNpmPackage {
+with pkgs; pkgs.buildNpmPackage rec {
   pname = "minesweeperbot";
   version = "1.0.0";
   src = ./.;
