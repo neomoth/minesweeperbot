@@ -20,12 +20,17 @@ class Canvas {
 		this.ctx = this.canvas.getContext('2d');
 
 		this.images = {};
+		this.theme='';
 		events.on('worldupdate',(x,y)=>{
 			return this.updateChunks(x,y);
 		});
 		events.on('secondElapsed',(game)=>{
 			this.drawTimer(game);
 			return this.updateCanvas(game);
+		});
+		events.on('themeChange',(theme)=>{
+			if(theme===Game.THEME.LIGHT) this.theme='';
+			if(theme===Game.THEME.DARK) this.theme='-dark';
 		});
 	}
 
@@ -44,7 +49,10 @@ class Canvas {
 	}
 
 	async loadAssets() {
-		const assets = ['tiles','numbers','numbers-id','buttons','buttons-disabled','buttons-selected','statuses','title','cmd','flag'];
+		const assets = [
+			'tiles','numbers','numbers-id','buttons','buttons-disabled','buttons-selected','statuses','title','cmd','flag',
+			'tiles-dark','numbers-dark','numbers-id-dark','buttons-dark','buttons-disabled-dark','buttons-selected-dark','statuses-dark','title-dark','cmd-dark','flag-dark'
+		];
 		for(const asset of assets) {
 			// console.log(`loading asset ${asset}`);
 			const img = await loadImage(path.join(__dirname, this.assets, `${asset}.png`));
@@ -57,9 +65,15 @@ class Canvas {
 	}
 
 	clearCanvas(){
-		this.ctx.fillStyle='#bbbbbb';
+		let bgclr='#bbbbbb';
+		let outclr='#999999';
+		if(this.theme==='-dark'){
+			bgclr='#5f5f5f';
+			outclr='#5a5a5a';
+		}
+		this.ctx.fillStyle=bgclr;
 		this.ctx.fillRect(0,0,this.canvas.width,this.canvas.height);
-		this.ctx.strokeStyle='#999999';
+		this.ctx.strokeStyle=outclr;
 		this.ctx.strokeRect(0,0,this.canvas.width,this.canvas.height);
 		this.btx.drawImage(this.canvas,0,0);
 	}
@@ -93,7 +107,7 @@ class Canvas {
 		tile.worldX = this.ox+offX+(x*8)+1;
 		tile.worldY = this.oy+offY+(y*8)+1;
 
-		this.ctx.drawImage(this.images['tiles'],idx*8,row*8, 9, 9, offX+x*8, offY+y*8, 9, 9);
+		this.ctx.drawImage(this.images['tiles'+this.theme],idx*8,row*8, 9, 9, offX+x*8, offY+y*8, 9, 9);
 	}
 
 	drawTimer(game){
@@ -108,11 +122,11 @@ class Canvas {
 
 	drawFlagCount(game){
 		this.drawNumber(game.bOffX-this.ox+(game.width*8)-10, game.bOffY-this.oy-6, game.mines-game.flagsPlaced,'right');
-		this.ctx.drawImage(this.images['flag'],game.bOffX-this.ox+(game.width*8)-5, game.bOffY-this.oy-6)
+		this.ctx.drawImage(this.images['flag'+this.theme],game.bOffX-this.ox+(game.width*8)-5, game.bOffY-this.oy-6)
 	}
 
 	drawStatus(game){
-		const img = this.images['statuses']
+		const img = this.images['statuses'+this.theme]
 		let width=0;
 		switch(game.state){
 			case Game.STATE.IDLE:{
@@ -141,7 +155,7 @@ class Canvas {
 
 	drawActiveID(game) {
 		const str = game.activePlayer === null ? "[---]" : `[${game.activePlayer}]`;
-		this.drawNumber(Math.floor(this.canvas.width / 2), 64, str, 'center','numbers-id');
+		this.drawNumber(Math.floor(this.canvas.width / 2), 64, str, 'center','numbers-id'+this.theme);
 	}
 
 	drawNumber(x, y, number, align = 'right', override=null) {
@@ -176,7 +190,7 @@ class Canvas {
 			if (isNaN(digit)) continue; // Skip invalid chars
 
 			this.ctx.drawImage(
-				this.images[override??'numbers'],
+				this.images[override??'numbers'+this.theme],
 				digit * digitWidth, 0,
 				digitWidth, digitHeight,
 				startX + i * digitWidth, y,
@@ -186,12 +200,12 @@ class Canvas {
 	}
 
 	drawStatic(){
-		this.ctx.drawImage(this.images['title'],Math.floor((this.canvas.width/2)-(this.images['title'].width/2)),2);
-		if(this.client.protocol==='v2') this.ctx.drawImage(this.images['cmd'],2,this.canvas.height-this.images['cmd'].height-2);
+		this.ctx.drawImage(this.images['title'+this.theme],Math.floor((this.canvas.width/2)-(this.images['title'+this.theme].width/2)),2);
+		if(this.client.protocol==='v2') this.ctx.drawImage(this.images['cmd'+this.theme],2,this.canvas.height-this.images['cmd'+this.theme].height-2);
 	}
 
 	drawButton(button){
-		let spritesheet = button.disabled ? this.images['buttons-disabled'] : button.selected ? this.images['buttons-selected'] : this.images['buttons'];
+		let spritesheet = button.disabled ? this.images['buttons-disabled'+this.theme] : button.selected ? this.images['buttons-selected'+this.theme] : this.images['buttons'+this.theme];
 		switch(button.id){
 			case 'startbtn':{
 				button.w=40;
@@ -231,6 +245,24 @@ class Canvas {
 				button.x=2;
 				button.y=44;
 				this.ctx.drawImage(spritesheet,0,84,button.w,button.h,button.x,button.y,button.w,button.h);
+				break;
+			}
+			case 'themelightbtn':{
+				if(button.game.theme!==Game.THEME.LIGHT) break;
+				button.w=56;
+				button.x=2;
+				button.h=6;
+				button.y=this.canvas.height-button.h-2-(this.client.protocol==="v2"?7:0);
+				this.ctx.drawImage(spritesheet,0,126,button.w,button.h,button.x,button.y,button.w,button.h);
+				break;
+			}
+			case 'themedarkbtn':{
+				if(button.game.theme!==Game.THEME.DARK) break;
+				button.w=51;
+				button.h=6;
+				button.y=this.canvas.height-button.h-2-(this.client.protocol==="v2"?7:0);
+				button.x=2;
+				this.ctx.drawImage(spritesheet,0,126,button.w,button.h,button.x,button.y,button.w,button.h);
 				break;
 			}
 		}

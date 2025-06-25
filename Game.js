@@ -3,7 +3,7 @@ const path = require('node:path');
 const { events } = require('./util');
 
 class Button{
-	constructor(game, id, callbacks, associatedDifficulty=null){
+	constructor(game, id, callbacks){
 		this.id = id;
 		this.game = game;
 		//xywh set by canvas
@@ -13,7 +13,8 @@ class Button{
 		this.h = 0;
 		this.selected = false;
 		this.disabled = false;
-		this.associatedDifficulty = associatedDifficulty;
+		this.passthrough = false;
+		this.ignore = false;
 		if(callbacks.onClick) this.onClick = (id)=> callbacks.onClick(this, id);
 		if(callbacks.onFail) this.onFail = ()=> callbacks.onFail(this);
 		if(callbacks.onStart) this.onStart = ()=> callbacks.onStart(this);
@@ -41,8 +42,13 @@ class Game{
 		FAIL:3,
 		QUIT:4,
 	}
+	static THEME = {
+		LIGHT:0,
+		DARK:1,
+	}
 	constructor(difficulty){
 		this.difficulty = difficulty;
+		this.theme = Game.THEME.LIGHT;
 		this.generateButtons();
 		this.buttons.forEach(btn=>{
 			if(btn.onInit) btn.onInit();
@@ -187,6 +193,30 @@ class Game{
 					btn.disabled = false;
 				}
 			}, Game.DIFFICULTY.EXPERT),
+			new Button(this, 'themelightbtn',{
+				onInit:(btn)=>{
+					btn.theme=Game.THEME.LIGHT;
+				},
+				onClick:(btn)=>{
+					if(btn.game.theme!==btn.theme) return;
+					btn.game.nextTheme();
+					// btn.game.buttons.forEach(button=>{
+					// 	if(button.id!==btn.id&&button.id.includes('theme')){
+					// 		if()
+					// 	}
+					// });
+				}
+			}),
+			new Button(this, 'themedarkbtn', {
+				onInit:(btn)=>{
+					btn.theme=Game.THEME.DARK;
+				},
+				onClick:(btn)=>{
+					// console.log(btn.game.theme);
+					if(btn.game.theme!==btn.theme) return;
+					btn.game.nextTheme();
+				}
+			}),
 			// new Button(this,'hellbtn',{
 			// 	onClick:(btn)=>{
 			// 		if(btn.game.state===Game.STATE.PLAYING) return;
@@ -199,6 +229,18 @@ class Game{
 			// 	}
 			// }, Game.DIFFICULTY.SUICIDAL),
 		];
+	}
+
+	nextTheme(){
+		// console.log(this.theme)
+		if(++this.theme>=Object.keys(Game.THEME).length) this.theme = 0;
+		// console.log(this.theme)
+		this.buttons.forEach(button=>{
+			if(button.id.includes('theme')){
+				button.ignore=button.theme!==this.theme;
+			}
+		});
+		events.emit('themeChange',this.theme);
 	}
 
 	generateBoard(){
@@ -410,16 +452,22 @@ class Game{
 
 	async tryClickButton(cx,cy,id){
 		if(this.activePlayer!==null&&id!==this.activePlayer) return;
+		let success = false;
 		for(const button of this.buttons){
+			if(button.ignore) continue;
 			let x = cx-this.offX;
 			let y = cy-this.offY;
 			let w = (button.x+button.w);
 			let h = (button.y+button.h);
 			if(x<button.x||y<button.y||x>=w-1||y>=h-1)continue;
 			button.onClick(id);
+			if(button.passthrough){
+				success = true;
+				continue;
+			}
 			return true;
 		}
-		return false;
+		return success;
 	}
 
 	fail(){

@@ -73,11 +73,13 @@ require('dotenv').config();
 
 	async function checkButton(id,x,y,[r,g,b]){
 		if(!store.game||id===client.bot.player.id) return;
+		if(store.game.activePlayer!==null&&id!==store.game.activePlayer) return;
 		if(await store.game.tryClickButton(x, y, id)) store.canvas.updateCanvas(store.game);
 	}
 
 	async function checkTile(id,x,y,[r,g,b]){
 		if(!store.game||id===client.bot.player.id) return;
+		if(store.game.activePlayer!==null&&id!==store.game.activePlayer) return;
 		const c = store.game.toTileCoords(x,y);
 		if(!c) return;
 		const tile = store.game.getTile(c[0],c[1]);
