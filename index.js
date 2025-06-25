@@ -7,8 +7,8 @@ require('dotenv').config();
 
 (async()=>{
 	const options = {
-		worldX: 728,
-		worldY: 119,
+		worldX: 318,
+		worldY: -610,
 		defaultDifficulty: Game.DIFFICULTY.INTERMEDIATE,
 	}
 
