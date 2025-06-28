@@ -240,11 +240,21 @@ class Canvas {
 				break;
 			}
 			case 'expertbtn':{
+				if(button.game.deathShown) break;
 				button.w=47;
 				button.h=21;
 				button.x=2;
 				button.y=44;
 				this.ctx.drawImage(spritesheet,0,84,button.w,button.h,button.x,button.y,button.w,button.h);
+				break;
+			}
+			case 'deathbtn':{
+				if(!button.game.deathShown) break;
+				button.w=70;
+				button.h=21;
+				button.x=2;
+				button.y=44;
+				this.ctx.drawImage(spritesheet,0,105,button.w,button.h,button.x,button.y,button.w,button.h);
 				break;
 			}
 			case 'themelightbtn':{

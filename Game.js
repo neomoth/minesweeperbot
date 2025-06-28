@@ -29,6 +29,7 @@ class Game{
 	offX=0;
 	offY=0;
 	selectedDifficultyButton=null;
+	deathShown=false;
 	static DIFFICULTY = {
 		BEGINNER:0,
 		INTERMEDIATE:1,
@@ -83,7 +84,7 @@ class Game{
 				break;
 			}
 			case Game.DIFFICULTY.SUICIDAL:{
-				this.width=30;
+				this.width=34;
 				this.height=16;
 				this.mines=240;
 				break;
@@ -136,6 +137,7 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.BEGINNER;
 					btn.game.init();
+					if(this.deathShown) this.deathShown = false;
 				},
 				onInit:(btn)=>{
 					if(btn.game.difficulty!==Game.DIFFICULTY.BEGINNER) return;
@@ -158,6 +160,7 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.INTERMEDIATE;
 					btn.game.init();
+					if(this.deathShown) this.deathShown = false;
 				},
 				onInit:(btn)=>{
 					if(btn.game.difficulty!==Game.DIFFICULTY.INTERMEDIATE) return;
@@ -173,6 +176,21 @@ class Game{
 			}, Game.DIFFICULTY.INTERMEDIATE),
 			new Button(this,'expertbtn',{
 				onClick:(btn)=>{
+					if(this.deathShown) return;
+					btn.clicks++;
+					btn.clickTime=Date.now();
+					if(btn.clicks===10){
+						btn.clicks=0;
+						this.deathShown=true;
+						btn.game.selectedDifficultyButton=btn;
+						btn.game.difficulty=Game.DIFFICULTY.SUICIDAL;
+						btn.selected=false;
+						btn.game.buttons.forEach(button=>{
+							if(button.id==='deathbtn') button.selected=true;
+						});
+						btn.game.init();
+						return;
+					}
 					if(btn.game.state===Game.STATE.PLAYING) return;
 					if(btn.disabled||btn.selected) return;
 					btn.selected=true;
@@ -180,8 +198,15 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.EXPERT;
 					btn.game.init();
+					if(this.deathShown) this.deathShown = false;
 				},
 				onInit:(btn)=>{
+					btn.clicks=0;
+					btn.clickTime=Date.now();
+					btn.clickInterval = setInterval(()=>{
+						if(Date.now()-btn.clickTime<500) return;
+						if(btn.clicks>0) btn.clicks--;
+					},850);
 					if(btn.game.difficulty!==Game.DIFFICULTY.EXPERT) return;
 					btn.selected=true;
 					btn.game.selectedDifficultyButton=btn;
@@ -193,6 +218,29 @@ class Game{
 					btn.disabled = false;
 				}
 			}, Game.DIFFICULTY.EXPERT),
+			new Button(this,'deathbtn',{
+				onClick:(btn)=>{
+					if(!this.deathShown) return;
+					if(btn.game.state===Game.STATE.PLAYING) return;
+					if(btn.disabled||btn.selected) return;
+					btn.selected=true;
+					if(btn.game.selectedDifficultyButton) btn.game.selectedDifficultyButton.selected = false;
+					btn.game.selectedDifficultyButton = btn;
+					btn.game.difficulty=Game.DIFFICULTY.SUICIDAL;
+					btn.game.init();
+				},
+				onInit:(btn)=>{
+					if(btn.game.difficulty!==Game.DIFFICULTY.SUICIDAL) return;
+					btn.selected=true;
+					btn.game.selectedDifficultyButton=btn;
+				},
+				onStart:(btn)=>{
+					if(!btn.selected) btn.disabled = true;
+				},
+				onEnd:(btn)=>{
+					btn.disabled = false;
+				}
+			}),
 			new Button(this, 'themelightbtn',{
 				onInit:(btn)=>{
 					btn.theme=Game.THEME.LIGHT;
@@ -217,17 +265,6 @@ class Game{
 					btn.game.nextTheme();
 				}
 			}),
-			// new Button(this,'hellbtn',{
-			// 	onClick:(btn)=>{
-			// 		if(btn.game.state===Game.STATE.PLAYING) return;
-			// 		if(btn.disabled||btn.selected) return;
-			// 		btn.selected=true;
-			// 		if(btn.game.selectedDifficultyButton) btn.game.selectedDifficultyButton.selected = false;
-			// 		btn.game.selectedDifficultyButton = btn;
-			// 		btn.game.difficulty=Game.DIFFICULTY.BEGINNER;
-			// 		btn.game.init();
-			// 	}
-			// }, Game.DIFFICULTY.SUICIDAL),
 		];
 	}
 
