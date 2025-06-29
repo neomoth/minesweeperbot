@@ -27,6 +27,7 @@ class Client{
 			this.#resolveReady = res;
 		});
 		this.bot.on('id', async(id)=>{
+			this.bot.chat.send('/nick Minesweeper');
 			await this.initChunks(pgopts);
 			// this.#resolveReady();
 
