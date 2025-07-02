@@ -436,6 +436,7 @@ class Game{
 		if(this.state!==Game.STATE.PLAYING) return;
 		if(x<0||x>this.width||y<0||y>this.height) return;
 		if(this.board[y][x].revealed) return;
+		if(this.flagsPlaced===this.mines&&!this.board[y][x].flagged) return;
 
 		this.board[y][x].flagged = !this.board[y][x].flagged;
 		this.flagsPlaced+=this.board[y][x].flagged?1:-1;
