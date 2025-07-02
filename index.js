@@ -16,6 +16,46 @@ require('dotenv').config();
 		game: null,
 		canvas: null,
 		difficulty: options.defaultDifficulty,
+		cooldowns:{},
+		genTimeout:(cb, ms)=>{
+			const start = Date.now();
+			const id = setTimeout(cb,ms);
+			return{
+				timeLeft: ()=>Math.max(0,ms-(Date.now()-start)),
+				clear:()=>clearTimeout(id),
+				id
+			}
+		},
+		addCooldown:(id, type, ms)=>{
+			if(!store.cooldowns[id]) this.cooldowns[id]={};
+			store.cooldowns[id][type] = ms;
+			store.cooldowns[id][`${type}_timer`] = store.genTimeout(()=>{
+				store.cooldowns[id][`${type}_timer`] = null;
+				store.cooldowns[id][type] = 0;
+			},ms);
+		},
+		getCooldown:(id, type)=>{
+			if(!store.cooldowns[id]) this.cooldowns[id]={};
+			return store.cooldowns[id][type]??null;
+		},
+		onCooldown:(id, type)=>{
+			if(!store.cooldowns[id]) store.cooldowns[id]={};
+			return store.cooldowns[id][type]!==null?store.cooldowns[id][type]>0:false;
+		},
+		extendCooldown:(id, type, ms)=>{
+			if(!store.cooldowns[id]) store.cooldowns[id]={};
+			const timeLeft = store.cooldowns[id][`${type}_timer`].timeLeft();
+			store.cooldowns[id][`${type}_timer`].clear();
+			delete store.cooldowns[id][`${type}_timer`];
+			store.cooldowns[id][`${type}_timer`] = store.genTimeout(()=>{
+				store.cooldowns[id][`${type}_timer`] = null;
+				store.cooldowns[id][type] = 0;
+			},timeLeft+ms);
+		},
+		rmCooldown:(id, type)=>{
+			if(!store.cooldowns[id]) store.cooldowns[id]={};
+			store.cooldowns[id][type]=0;
+		}
 	}
 
 	const client = new Client(options, {
@@ -74,19 +114,38 @@ require('dotenv').config();
 	async function checkButton(id,x,y,[r,g,b]){
 		if(!store.game||id===client.bot.player.id) return;
 		if(store.game.activePlayer!==null&&id!==store.game.activePlayer) return;
+		const buttons = store.game.getButtonsAtPos(x,y);
+		if(buttons.some(btn=>btn.id.includes('theme'))) {
+			// if(store.onCooldown(id,"theme_button")){
+			// 	store.extendCooldown(id,"theme_button", 200);
+			// 	return;
+			// }
+			if(store.onCooldown(id,"theme_button")) return;
+			store.addCooldown(id,"theme_button",800);
+			if(await store.game.tryClickButton(x, y, id)) store.canvas.updateCanvas(store.game);
+			return;
+		}
+		// if(store.onCooldown(id,"button")) {
+		// 	store.extendCooldown(id,"button", 10);
+		// 	return;
+		// }
+		if(store.onCooldown(id,"button")) return;
+		store.addCooldown(id,"button",20);
 		if(await store.game.tryClickButton(x, y, id)) store.canvas.updateCanvas(store.game);
 	}
 
 	async function checkTile(id,x,y,[r,g,b]){
 		if(!store.game||id===client.bot.player.id) return;
 		if(store.game.activePlayer!==null&&id!==store.game.activePlayer) return;
+		if(store.onCooldown(id,`tile_${x}_${y}`)) return;
 		const c = store.game.toTileCoords(x,y);
 		if(!c) return;
 		const tile = store.game.getTile(c[0],c[1]);
 		if(!tile) return;
-		if(r===0xFF&&g===0xFF&&b===0xFF) store.game.toggleFlagTile(c[0],c[1]);
+		if(r===0xFF&&g===0xFF&&b===0xFF && !tile.revealed) store.game.toggleFlagTile(c[0],c[1]);
 		else if(tile.revealed) store.game.altRevealAdjacentTiles(c[0],c[1]);
 		else store.game.revealTile(c[0],c[1]);
+		store.addCooldown(id, `tile_${x}_${y}`,350);
 	}
 
 	client.bot.on('chunk', async(x,y,chunk)=>{

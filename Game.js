@@ -502,16 +502,35 @@ class Game{
 		return null;
 	}
 
+	#btncheck(button, cx, cy){
+		if(button.ignore) return false;
+		let x = cx-this.offX;
+		let y = cy-this.offY;
+		let w = (button.x+button.w);
+		let h = (button.y+button.h);
+		return !(x < button.x || y < button.y || x >= w - 1 || y >= h - 1);
+	}
+
+	getButtonAtPos(cx,cy){
+		for(const button of this.buttons){
+			if(this.#btncheck(button,cx,cy)) return button;
+		}
+		return null;
+	}
+
+	getButtonsAtPos(cx,cy){
+		const clicked = [];
+		this.buttons.forEach(button=>{
+			if(this.#btncheck(button,cx,cy)) clicked.push(button);
+		});
+		return clicked;
+	}
+
 	async tryClickButton(cx,cy,id){
 		if(this.activePlayer!==null&&id!==this.activePlayer) return;
 		let success = false;
 		for(const button of this.buttons){
-			if(button.ignore) continue;
-			let x = cx-this.offX;
-			let y = cy-this.offY;
-			let w = (button.x+button.w);
-			let h = (button.y+button.h);
-			if(x<button.x||y<button.y||x>=w-1||y>=h-1)continue;
+			if(!this.#btncheck(button,cx,cy)) continue;
 			button.onClick(id);
 			if(button.passthrough){
 				success = true;
