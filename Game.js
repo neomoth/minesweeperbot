@@ -15,6 +15,7 @@ class Button{
 		this.disabled = false;
 		this.passthrough = false;
 		this.ignore = false;
+		this.type=0;
 		if(callbacks.onClick) this.onClick = (id)=> callbacks.onClick(this, id);
 		if(callbacks.onFail) this.onFail = ()=> callbacks.onFail(this);
 		if(callbacks.onStart) this.onStart = ()=> callbacks.onStart(this);
@@ -105,7 +106,7 @@ class Game{
 				onClick:(btn,id)=>{
 					if(btn.disabled||btn.selected) return;
 					btn.selected=true;
-
+					btn.game.buttons.find(b=>b.id==='expertbtn').clicks=0;
 					if(btn.game.state!==Game.STATE.IDLE) btn.game.init();
 					this.start(id);
 				},
@@ -137,9 +138,11 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.BEGINNER;
 					btn.game.init();
+					btn.game.deselectOtherButtons(btn);
 					if(this.deathShown) this.deathShown = false;
 				},
 				onInit:(btn)=>{
+					btn.type = 1;
 					if(btn.game.difficulty!==Game.DIFFICULTY.BEGINNER) return;
 					btn.selected=true;
 					btn.game.selectedDifficultyButton=btn;
@@ -160,9 +163,11 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.INTERMEDIATE;
 					btn.game.init();
+					btn.game.deselectOtherButtons(btn);
 					if(this.deathShown) this.deathShown = false;
 				},
 				onInit:(btn)=>{
+					btn.type = 1;
 					if(btn.game.difficulty!==Game.DIFFICULTY.INTERMEDIATE) return;
 					btn.selected=true;
 					btn.game.selectedDifficultyButton=btn;
@@ -176,6 +181,7 @@ class Game{
 			}, Game.DIFFICULTY.INTERMEDIATE),
 			new Button(this,'expertbtn',{
 				onClick:(btn)=>{
+					if(btn.game.state===Game.STATE.PLAYING) return;
 					if(this.deathShown) return;
 					btn.clicks++;
 					btn.clickTime=Date.now();
@@ -185,9 +191,8 @@ class Game{
 						btn.game.selectedDifficultyButton=btn;
 						btn.game.difficulty=Game.DIFFICULTY.SUICIDAL;
 						btn.selected=false;
-						btn.game.buttons.forEach(button=>{
-							if(button.id==='deathbtn') button.selected=true;
-						});
+						btn.game.deselectOtherButtons(btn);
+						btn.game.buttons.find(b=>b.id==='deathbtn').selected=true;
 						btn.game.init();
 						return;
 					}
@@ -201,6 +206,7 @@ class Game{
 					if(this.deathShown) this.deathShown = false;
 				},
 				onInit:(btn)=>{
+					btn.type = 1;
 					btn.clicks=0;
 					btn.clickTime=Date.now();
 					btn.clickInterval = setInterval(()=>{
@@ -228,8 +234,10 @@ class Game{
 					btn.game.selectedDifficultyButton = btn;
 					btn.game.difficulty=Game.DIFFICULTY.SUICIDAL;
 					btn.game.init();
+					btn.game.deselectOtherButtons(btn);
 				},
 				onInit:(btn)=>{
+					btn.type = 1;
 					if(btn.game.difficulty!==Game.DIFFICULTY.SUICIDAL) return;
 					btn.selected=true;
 					btn.game.selectedDifficultyButton=btn;
@@ -266,6 +274,13 @@ class Game{
 				}
 			}),
 		];
+	}
+
+	deselectOtherButtons(button){
+		this.buttons.forEach(btn=>{
+			if(btn.id!==button.id&&btn.type===1&&btn.selected) btn.selected=false;
+		});
+		if(button.id!=='expertbtn')button.game.buttons.find(b=>b.id==='expertbtn').clicks=0;
 	}
 
 	nextTheme(){

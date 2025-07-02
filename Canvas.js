@@ -32,6 +32,9 @@ class Canvas {
 			if(theme===Game.THEME.LIGHT) this.theme='';
 			if(theme===Game.THEME.DARK) this.theme='-dark';
 		});
+
+		this.debug = false;
+		this.debugInterval = null;
 	}
 
 	static async create(client,x,y,assetPath='assets'){
@@ -295,6 +298,10 @@ class Canvas {
 		this.drawFlagCount(game);
 		this.drawStatus(game);
 		this.drawActiveID(game);
+		if(this.debug){
+			if(this.debugInterval===null) this.debugInterval = setInterval(()=>{this.updateCanvas(game)}, 10);
+			this.drawDebug(game);
+		}
 		return this.updateWorld();
 	}
 
@@ -401,6 +408,82 @@ class Canvas {
 					// this.client.queuePixel(px,py,clr);
 				});
 				return Promise.all(pixelPromises);
+			}
+		}
+	}
+
+	drawDebug(game){
+		if(this.debug){
+			// rgb are 0-255 pretty please
+			const pixel = (x,y,[r,g,b])=>{
+				r = r.toString(16).padStart(2, '0');
+				g = g.toString(16).padStart(2, '0');
+				b = b.toString(16).padStart(2, '0');
+				this.ctx.fillStyle = `#${r}${g}${b}`;
+				this.ctx.fillRect(x,y,1,1);
+			}
+
+			const px = this.canvas.width-108;
+			const py = 34;
+
+			const ctv = (a,b,c,v)=>{
+				if(b===c)return 0;
+				return Math.round(((a-b)/(c-b))*v);
+			}
+
+			const gstate =
+				game.state===Game.STATE.IDLE ? [0xFF,0x77,0x00] :
+					game.state===Game.STATE.PLAYING ? [0xFF,0xFF,0x00] :
+						game.state===Game.STATE.QUIT ? [0xA5,0x12,0x83] :
+							game.state===Game.STATE.WIN ? [0x33,0xFF,0x66] : [0xFF,0x00,0x00]; //last state fail
+
+			/*
+			* this.selected = false;
+			* this.disabled = false;
+			* this.passthrough = false;
+			* this.ignore = false;
+			*/
+			const btnstates = [];
+			const clrs = {
+				selected: {
+					true: [0x00,0xFF,0x00],
+					false: [0xFF,0x00,0x00],
+				},
+				disabled: {
+					true: [0xFF,0x00,0x33],
+					false: [0x44,0x44,0x44],
+				},
+				passthrough: {
+					true: [0x88,0x88,0x00],
+					false: [0x44,0x44,0x44],
+				},
+				ignore:{
+					true: [0x00,0xFF,0xFF],
+					false: [0x44,0x44,0x44],
+				},
+			}
+			game.buttons.forEach(btn=>{
+				btnstates.push({
+					selected: clrs.selected[btn.selected.toString()],
+					disabled: clrs.disabled[btn.disabled.toString()],
+					passthrough: clrs.passthrough[btn.passthrough.toString()],
+					ignore: clrs.ignore[btn.passthrough.toString()],
+					clicks: btn.clicks!==undefined ? [0x44,ctv(btn.clicks,0,10,0xFF),0x44] : null,
+					button: btn,
+				});
+			});
+			pixel(px,py-1,gstate);
+			for(let i=0;i<btnstates.length;i++){
+				pixel(px+i,py,btnstates[i].selected);
+				pixel(px+i,py+1,btnstates[i].disabled);
+				pixel(px+i,py+2,btnstates[i].passthrough);
+				pixel(px+i,py+3,btnstates[i].ignore);
+				if(btnstates[i].clicks!==null){
+					for(let j=0;j<10;j++){
+						// console.log(btnstates[i].clicks>=j, btnstates[i].clicks, j);
+						pixel(px+j,py+5,btnstates[i].button.clicks>j?btnstates[i].clicks:[0x44,0x44,0x44]);
+					}
+				}
 			}
 		}
 	}
