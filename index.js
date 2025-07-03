@@ -137,15 +137,16 @@ require('dotenv').config();
 	async function checkTile(id,x,y,[r,g,b]){
 		if(!store.game||id===client.bot.player.id) return;
 		if(store.game.activePlayer!==null&&id!==store.game.activePlayer) return;
-		if(store.onCooldown(id,`tile_${x}_${y}`)) return;
 		const c = store.game.toTileCoords(x,y);
 		if(!c) return;
 		const tile = store.game.getTile(c[0],c[1]);
+		if(store.onCooldown(id,`tile_${c[0]}_${c[1]}`)) return;
+		console.log(`no cooldown on tile ${c[0]},${c[1]}`);
 		if(!tile) return;
 		if(r===0xFF&&g===0xFF&&b===0xFF && !tile.revealed) store.game.toggleFlagTile(c[0],c[1]);
 		else if(tile.revealed) store.game.altRevealAdjacentTiles(c[0],c[1]);
 		else store.game.revealTile(c[0],c[1]);
-		store.addCooldown(id, `tile_${x}_${y}`,350);
+		store.addCooldown(id, `tile_${c[0]}_${c[1]}`,store.game.getPlayerConfig(id,'tileDelay'));
 	}
 
 	client.bot.on('chunk', async(x,y,chunk)=>{
