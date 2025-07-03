@@ -31,6 +31,7 @@ class Game{
 	offY=0;
 	selectedDifficultyButton=null;
 	deathShown=false;
+	times = [];
 	static DIFFICULTY = {
 		BEGINNER:0,
 		INTERMEDIATE:1,
@@ -588,6 +589,10 @@ class Game{
 		});
 		this.flagAllMines();
 		this.state=Game.STATE.WIN;
+
+		this.times.push(this.elapsedSeconds);
+		if(this.times.length>4) this.times.shift();
+
 		this.end();
 	}
 

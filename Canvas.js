@@ -121,6 +121,13 @@ class Canvas {
 		// for(let i=0;i<length;i++){
 		// 	this.ctx.drawImage(this.images['numbers'],4*parseInt(str[i]),0,4,6,this.canvas.width-6-((length+2)*i),2,4,6);
 		// }
+
+		this.ctx.fillStyle='#00000033';
+		this.ctx.fillRect(this.canvas.width-20,9,18,1);
+		let times = game.times.toReversed();
+		for(let i=0;i<times.length;i++){
+			this.drawNumber(this.canvas.width-6,11+(7*i),times[i], 'right','numbers-id'+this.theme);
+		}
 	}
 
 	drawFlagCount(game){
