@@ -601,7 +601,7 @@ class Game{
 	static confDefaults = {
 		safeZone: true,
 		mustFlagAllMines: false,
-		tileDelay: 450,
+		tileDelay: 250,
 	}
 
 	setPlayerConfig(id,key,val){

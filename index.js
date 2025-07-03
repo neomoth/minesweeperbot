@@ -126,7 +126,7 @@ require('dotenv').config();
 			return;
 		}
 		// if(store.onCooldown(id,"button")) {
-		// 	store.extendCooldown(id,"button", 10);
+		// 	store.extendCooldown(id,"button", 10);hi hi hi
 		// 	return;
 		// }
 		if(store.onCooldown(id,"button")) return;
